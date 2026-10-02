@@ -1,0 +1,1573 @@
+<html lang="ko" class="scroll-smooth"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIwNTk5MTUxOTg0ODc1ODgyMzk4NiIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjX2VlNmUzNWEyNzBiYmY0OTdfaW5kZXguaHRtbC0yMzEifSwiZXhwIjoxNzkwOTEwMDU4LCJpYXQiOjE3OTA5MDY0NTgsImFsZyI6IlJTMjU2In0.KNgMO1uuVVyVfjIlWgQCq4eC2vyhuGnhwic3T0Rken3EJCKdb05NLG5YCbz6V-DDULe3JGyOdmr6A0ENtpJjIqV7p5GCEYrPxfZ-Pwi8o9NvDPS5XDS1YimRFpiWyNDSxHgJM7IMfZqIb2jBtOfELo_uqRYb3V1BQXp42E8alJtW7ZONDQTJPHpN3tAVkXALPzxigju21p3Udd0EizmVBhDDxQQZc3HXuj96OStC7x8f6RHTnTy7lQaYAwm8xTpU6JTzluV5LweK3N469dkHZjUni7X2JrAhQddwksvSF0omBqqmtqozjQinsS76UgmITgKWXK_SOHeK2V8UUcqB2w","c_ee6e35a270bbf497_index.html-231")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>찰칵분리 - AI 스마트 분리배출 가이드</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        },
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Pretendard', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+        }
+        .scan-line {
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #10b981, transparent);
+            position: absolute;
+            width: 100%;
+            animation: scan 2s infinite ease-in-out;
+        }
+        @keyframes scan {
+            0% { top: 0%; opacity: 0.8; }
+            50% { top: 95%; opacity: 1; }
+            100% { top: 0%; opacity: 0.8; }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Inter, Pretendard, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.top-0{top:0px}.bottom-3{bottom:0.75rem}.left-3{left:0.75rem}.z-10{z-index:10}.z-50{z-index:50}.z-20{z-index:20}.z-30{z-index:30}.mx-auto{margin-left:auto;margin-right:auto}.my-3{margin-top:0.75rem;margin-bottom:0.75rem}.my-auto{margin-top:auto;margin-bottom:auto}.-mt-1{margin-top:-0.25rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.mb-0\.5{margin-bottom:0.125rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-5{margin-bottom:1.25rem}.ml-1{margin-left:0.25rem}.ml-auto{margin-left:auto}.mr-1{margin-right:0.25rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.h-10{height:2.5rem}.h-16{height:4rem}.h-2{height:0.5rem}.h-4{height:1rem}.h-56{height:14rem}.h-64{height:16rem}.h-8{height:2rem}.h-full{height:100%}.max-h-\[85vh\]{max-height:85vh}.min-h-screen{min-height:100vh}.min-h-\[320px\]{min-height:320px}.min-h-\[460px\]{min-height:460px}.w-10{width:2.5rem}.w-2{width:0.5rem}.w-4{width:1rem}.w-8{width:2rem}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-4xl{max-width:56rem}.max-w-7xl{max-width:80rem}.max-w-3xl{max-width:48rem}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.flex-grow{flex-grow:1}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.-translate-y-1\/2{--tw-translate-y:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}.cursor-pointer{cursor:pointer}.resize-none{resize:none}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.items-stretch{align-items:stretch}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-3{gap:0.75rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.space-x-1 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.25rem * var(--tw-space-x-reverse));margin-left:calc(0.25rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.375rem * var(--tw-space-x-reverse));margin-left:calc(0.375rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-x-3 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.75rem * var(--tw-space-x-reverse));margin-left:calc(0.75rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-12 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(3rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(3rem * var(--tw-space-y-reverse))}.space-x-3\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.875rem * var(--tw-space-x-reverse));margin-left:calc(0.875rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-2\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.625rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.625rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.scroll-smooth{scroll-behavior:smooth}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rounded-2xl{border-radius:1rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.rounded{border-radius:0.25rem}.rounded-3xl{border-radius:1.5rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-dashed{border-style:dashed}.border-slate-200\/60{border-color:rgb(226 232 240 / 0.6)}.border-slate-300{--tw-border-opacity:1;border-color:rgb(203 213 225 / var(--tw-border-opacity, 1))}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}.border-emerald-100{--tw-border-opacity:1;border-color:rgb(209 250 229 / var(--tw-border-opacity, 1))}.border-emerald-400\/30{border-color:rgb(52 211 153 / 0.3)}.border-green-100{--tw-border-opacity:1;border-color:rgb(220 252 231 / var(--tw-border-opacity, 1))}.border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.border-slate-700{--tw-border-opacity:1;border-color:rgb(51 65 85 / var(--tw-border-opacity, 1))}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.border-teal-100{--tw-border-opacity:1;border-color:rgb(204 251 241 / var(--tw-border-opacity, 1))}.border-white\/10{border-color:rgb(255 255 255 / 0.1)}.border-white{--tw-border-opacity:1;border-color:rgb(255 255 255 / var(--tw-border-opacity, 1))}.bg-emerald-100{--tw-bg-opacity:1;background-color:rgb(209 250 229 / var(--tw-bg-opacity, 1))}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-amber-50{--tw-bg-opacity:1;background-color:rgb(255 251 235 / var(--tw-bg-opacity, 1))}.bg-black{--tw-bg-opacity:1;background-color:rgb(0 0 0 / var(--tw-bg-opacity, 1))}.bg-emerald-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-emerald-50{--tw-bg-opacity:1;background-color:rgb(236 253 245 / var(--tw-bg-opacity, 1))}.bg-emerald-500{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-emerald-950\/5{background-color:rgb(2 44 34 / 0.05)}.bg-green-50{--tw-bg-opacity:1;background-color:rgb(240 253 244 / var(--tw-bg-opacity, 1))}.bg-green-600{--tw-bg-opacity:1;background-color:rgb(22 163 74 / var(--tw-bg-opacity, 1))}.bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.bg-slate-900{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.bg-slate-900\/60{background-color:rgb(15 23 42 / 0.6)}.bg-slate-900\/80{background-color:rgb(15 23 42 / 0.8)}.bg-teal-50{--tw-bg-opacity:1;background-color:rgb(240 253 250 / var(--tw-bg-opacity, 1))}.bg-teal-600{--tw-bg-opacity:1;background-color:rgb(13 148 136 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/10{background-color:rgb(255 255 255 / 0.1)}.bg-white\/90{background-color:rgb(255 255 255 / 0.9)}.bg-purple-600{--tw-bg-opacity:1;background-color:rgb(147 51 234 / var(--tw-bg-opacity, 1))}.bg-white\/5{background-color:rgb(255 255 255 / 0.05)}.bg-gradient-to-b{background-image:linear-gradient(to bottom, var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.bg-gradient-to-br{background-image:linear-gradient(to bottom right, var(--tw-gradient-stops))}.from-emerald-50{--tw-gradient-from:#ecfdf5 var(--tw-gradient-from-position);--tw-gradient-to:rgb(236 253 245 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-emerald-600{--tw-gradient-from:#059669 var(--tw-gradient-from-position);--tw-gradient-to:rgb(5 150 105 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-slate-900{--tw-gradient-from:#0f172a var(--tw-gradient-from-position);--tw-gradient-to:rgb(15 23 42 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-teal-50\/30{--tw-gradient-to:rgb(240 253 250 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), rgb(240 253 250 / 0.3) var(--tw-gradient-via-position), var(--tw-gradient-to)}.via-slate-800{--tw-gradient-to:rgb(30 41 59 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #1e293b var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-slate-50{--tw-gradient-to:#f8fafc var(--tw-gradient-to-position)}.to-teal-700{--tw-gradient-to:#0f766e var(--tw-gradient-to-position)}.to-emerald-950{--tw-gradient-to:#022c22 var(--tw-gradient-to-position)}.bg-clip-text{-webkit-background-clip:text;background-clip:text}.object-cover{object-fit:cover}.p-1{padding:0.25rem}.p-2{padding:0.5rem}.p-2\.5{padding:0.625rem}.p-3{padding:0.75rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.pb-12{padding-bottom:3rem}.pb-16{padding-bottom:4rem}.pt-10{padding-top:2.5rem}.pb-3{padding-bottom:0.75rem}.pt-2{padding-top:0.5rem}.pt-3{padding-top:0.75rem}.pt-6{padding-top:1.5rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.text-2xl{font-size:1.5rem;line-height:2rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-\[9px\]{font-size:9px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-semibold{font-weight:600}.font-normal{font-weight:400}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-wider{letter-spacing:0.05em}.tracking-widest{letter-spacing:0.1em}.text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.text-emerald-800{--tw-text-opacity:1;color:rgb(6 95 70 / var(--tw-text-opacity, 1))}.text-slate-600{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-slate-800{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.text-slate-900{--tw-text-opacity:1;color:rgb(15 23 42 / var(--tw-text-opacity, 1))}.text-transparent{color:transparent}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6 / var(--tw-text-opacity, 1))}.text-amber-800{--tw-text-opacity:1;color:rgb(146 64 14 / var(--tw-text-opacity, 1))}.text-emerald-200{--tw-text-opacity:1;color:rgb(167 243 208 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-emerald-500{--tw-text-opacity:1;color:rgb(16 185 129 / var(--tw-text-opacity, 1))}.text-emerald-700{--tw-text-opacity:1;color:rgb(4 120 87 / var(--tw-text-opacity, 1))}.text-purple-600{--tw-text-opacity:1;color:rgb(147 51 234 / var(--tw-text-opacity, 1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-500{--tw-text-opacity:1;color:rgb(100 116 139 / var(--tw-text-opacity, 1))}.underline{-webkit-text-decoration-line:underline;text-decoration-line:underline}.decoration-emerald-300{-webkit-text-decoration-color:#6ee7b7;text-decoration-color:#6ee7b7}.opacity-20{opacity:0.2}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow{--tw-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-xl{--tw-shadow:0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-emerald-500\/30{--tw-shadow-color:rgb(16 185 129 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-emerald-600\/20{--tw-shadow-color:rgb(5 150 105 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-emerald-600\/30{--tw-shadow-color:rgb(5 150 105 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-emerald-600\/25{--tw-shadow-color:rgb(5 150 105 / 0.25);--tw-shadow:var(--tw-shadow-colored)}.shadow-green-600\/30{--tw-shadow-color:rgb(22 163 74 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-teal-600\/30{--tw-shadow-color:rgb(13 148 136 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.backdrop-blur{--tw-backdrop-blur:blur(8px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:scale-125:hover{--tw-scale-x:1.25;--tw-scale-y:1.25;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:border-emerald-400:hover{--tw-border-opacity:1;border-color:rgb(52 211 153 / var(--tw-border-opacity, 1))}.hover\:border-emerald-500:hover{--tw-border-opacity:1;border-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.hover\:bg-emerald-50:hover{--tw-bg-opacity:1;background-color:rgb(236 253 245 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-700:hover{--tw-bg-opacity:1;background-color:rgb(4 120 87 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-600:hover{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-100:hover{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-300:hover{--tw-bg-opacity:1;background-color:rgb(203 213 225 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-800:hover{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.hover\:bg-white\/10:hover{background-color:rgb(255 255 255 / 0.1)}.hover\:text-emerald-600:hover{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.hover\:text-slate-800:hover{--tw-text-opacity:1;color:rgb(30 41 59 / var(--tw-text-opacity, 1))}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}@media (min-width: 640px){.sm\:h-72{height:18rem}.sm\:p-5{padding:1.25rem}.sm\:p-6{padding:1.5rem}.sm\:p-7{padding:1.75rem}.sm\:p-8{padding:2rem}.sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}.sm\:text-5xl{font-size:3rem;line-height:1}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}.sm\:text-2xl{font-size:1.5rem;line-height:2rem}.sm\:text-3xl{font-size:1.875rem;line-height:2.25rem}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-xl{font-size:1.25rem;line-height:1.75rem}}@media (min-width: 768px){.md\:flex{display:flex}.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}.md\:items-center{align-items:center}}@media (min-width: 1024px){.lg\:col-span-4{grid-column:span 4 / span 4}.lg\:col-span-6{grid-column:span 6 / span 6}.lg\:col-span-8{grid-column:span 8 / span 8}.lg\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.lg\:px-8{padding-left:2rem;padding-right:2rem}}</style></head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-200/60 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <i class="fa-solid fa-camera-retro text-xl"></i>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-700 bg-clip-text text-transparent">찰칵분리</span>
+                    <span class="text-xs text-emerald-600 font-semibold block -mt-1">AI Recycle Guide</span>
+                </div>
+            </div>
+
+            <!-- Nav Items -->
+            <nav class="hidden md:flex items-center space-x-1 font-medium text-slate-600 text-sm">
+                <a href="#analyzer" class="px-3 py-2 rounded-lg hover:text-emerald-600 hover:bg-emerald-50 transition">AI 판독기</a>
+                <a href="#map" class="px-3 py-2 rounded-lg hover:text-emerald-600 hover:bg-emerald-50 transition">특수 수거함 지도</a>
+                <a href="#quiz" class="px-3 py-2 rounded-lg hover:text-emerald-600 hover:bg-emerald-50 transition">분리수거 퀴즈</a>
+                <a href="#impact" class="px-3 py-2 rounded-lg hover:text-emerald-600 hover:bg-emerald-50 transition">탄소 다이어리</a>
+            </nav>
+
+            <div class="flex items-center space-x-2">
+                <!-- Source Code Copy Button -->
+                <button onclick="openCodeModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold px-3 py-2 rounded-xl transition flex items-center space-x-1.5 border border-slate-300">
+                    <i class="fa-solid fa-code text-emerald-600"></i>
+                    <span>소스코드 복사</span>
+                </button>
+                <button onclick="scrollToAnalyzer()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl shadow-md shadow-emerald-600/20 transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>시작하기</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-grow space-y-12 pb-16">
+
+        <!-- Hero Section -->
+        <section class="relative bg-gradient-to-b from-emerald-50 via-teal-50/30 to-slate-50 pt-10 pb-12 px-4 sm:px-6 lg:px-8 text-center overflow-hidden">
+            <div class="max-w-4xl mx-auto relative z-10">
+                <span class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold mb-4">
+                    <i class="fa-solid fa-leaf text-emerald-600"></i>
+                    <span>AI 인공지능 기반 환경오염 예방 웹앱</span>
+                </span>
+                <h1 class="text-3xl sm:text-5xl font-black text-slate-900 leading-tight mb-4">
+                    애매한 쓰레기, <span class="text-emerald-600 underline decoration-emerald-300">사진 한 장</span>으로 올바르게 배출!
+                </h1>
+                <p class="text-slate-600 text-sm sm:text-base max-w-2xl mx-auto mb-6 leading-relaxed">
+                    AI 영상 인식 기술로 재질 분석, 오염도 검사, 맞춤 배출 가이드를 1초 만에 확인하세요.
+                </p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <a href="#analyzer" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-2xl shadow-lg shadow-emerald-600/30 transition flex items-center space-x-2 text-sm">
+                        <i class="fa-solid fa-camera"></i>
+                        <span>AI 분석 시작</span>
+                    </a>
+                    <button onclick="openCodeModal()" class="bg-white hover:bg-slate-100 text-slate-700 font-bold px-5 py-3 rounded-2xl shadow border border-slate-200 transition flex items-center space-x-2 text-sm">
+                        <i class="fa-solid fa-copy text-emerald-600"></i>
+                        <span>전체 코드 복사하기</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Classifier & Camera Simulator Section -->
+        <section id="analyzer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">AI 실시간 분리수거 판독기</h2>
+                <p class="text-slate-500 text-xs sm:text-sm mt-1">카메라 촬영, 이미지 업로드, 또는 아래의 테스트 샘플을 클릭하여 진단해보세요.</p>
+            </div>
+
+            <!-- Analyzer Container -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Input Panel (Left) -->
+                <div class="lg:col-span-6 bg-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-100 flex flex-col space-y-5">
+                    
+                    <!-- Mode Toggles -->
+                    <div class="flex p-1 bg-slate-100 rounded-2xl">
+                        <button id="btn-mode-preset" onclick="switchInputMode('preset')" class="flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-emerald-700 shadow-sm">
+                            <i class="fa-solid fa-list-check mr-1"></i>테스트 샘플
+                        </button>
+                        <button id="btn-mode-upload" onclick="switchInputMode('upload')" class="flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-slate-500 hover:text-slate-800">
+                            <i class="fa-solid fa-upload mr-1"></i>사진 업로드
+                        </button>
+                        <button id="btn-mode-camera" onclick="switchInputMode('camera')" class="flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-slate-500 hover:text-slate-800">
+                            <i class="fa-solid fa-video mr-1"></i>웹캠 촬영
+                        </button>
+                    </div>
+
+                    <!-- Viewport Display Box -->
+                    <div class="relative w-full h-64 sm:h-72 bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-inner group">
+                        
+                        <!-- Overlay Scanner Graphic -->
+                        <div id="scanner-overlay" class="hidden absolute inset-0 z-20 pointer-events-none">
+                            <div class="scan-line"></div>
+                            <div class="absolute bottom-3 left-3 bg-slate-900/80 text-emerald-400 text-xs px-3 py-1.5 rounded-full font-mono flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                <span>AI 딥러닝 영상 분석 중...</span>
+                            </div>
+                        </div>
+
+                        <!-- 1. Preset Mode -->
+                        <div id="view-preset" class="w-full h-full flex flex-col justify-center items-center p-2">
+                            <img id="preset-image-preview" src="https://images.unsplash.com/photo-1605600659873-d808a13e4d2a?auto=format&amp;fit=crop&amp;w=600&amp;q=80" alt="Preset Sample" class="w-full h-full object-cover rounded-xl">
+                        </div>
+
+                        <!-- 2. File Upload Mode -->
+                        <div id="view-upload" class="hidden w-full h-full flex flex-col justify-center items-center p-6 text-center border-2 border-dashed border-slate-700 rounded-xl hover:border-emerald-500 transition cursor-pointer" onclick="document.getElementById('file-input').click()">
+                            <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileUpload(event)">
+                            <img id="upload-preview" class="hidden w-full h-full object-cover rounded-xl">
+                            <div id="upload-placeholder" class="flex flex-col items-center space-y-2 text-slate-400">
+                                <i class="fa-solid fa-cloud-arrow-up text-4xl text-emerald-500"></i>
+                                <span class="font-medium text-xs sm:text-sm text-slate-200">클릭하거나 이미지를 드래그하세요</span>
+                                <span class="text-[10px] text-slate-500">JPG, PNG 포맷 지원</span>
+                            </div>
+                        </div>
+
+                        <!-- 3. Web Camera Mode -->
+                        <div id="view-camera" class="hidden w-full h-full relative flex items-center justify-center bg-black">
+                            <video id="webcam-feed" class="w-full h-full object-cover" autoplay="" playsinline="" muted=""></video>
+                            <canvas id="webcam-canvas" class="hidden"></canvas>
+                            <button id="cam-capture-btn" onclick="captureWebcam()" class="absolute bottom-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-full text-xs shadow-lg flex items-center space-x-1.5 z-30">
+                                <i class="fa-solid fa-circle-dot"></i>
+                                <span>스냅샷 촬영</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preset Selector Grid -->
+                    <div id="preset-selector-group" class="space-y-1.5">
+                        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">샘플 예시 선택</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="selectPreset('pet')" class="bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-400 p-2 rounded-xl text-left transition flex items-center space-x-1.5">
+                                <span class="text-base">🧴</span>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-800 truncate">페트병</p>
+                                    <p class="text-[9px] text-emerald-600 font-semibold">깨끗함</p>
+                                </div>
+                            </button>
+                            <button onclick="selectPreset('noodle')" class="bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-400 p-2 rounded-xl text-left transition flex items-center space-x-1.5">
+                                <span class="text-base">🍜</span>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-800 truncate">컵라면</p>
+                                    <p class="text-[9px] text-red-500 font-semibold">기름오염</p>
+                                </div>
+                            </button>
+                            <button onclick="selectPreset('pizza')" class="bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-400 p-2 rounded-xl text-left transition flex items-center space-x-1.5">
+                                <span class="text-base">🍕</span>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-800 truncate">피자박스</p>
+                                    <p class="text-[9px] text-amber-600 font-semibold">부분오염</p>
+                                </div>
+                            </button>
+                            <button onclick="selectPreset('battery')" class="bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-400 p-2 rounded-xl text-left transition flex items-center space-x-1.5">
+                                <span class="text-base">🔋</span>
+                                <div class="overflow-hidden">
+                                    <p class="text-xs font-bold text-slate-800 truncate">폐건전지</p>
+                                    <p class="text-[9px] text-purple-600 font-semibold">특수폐기</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Analyze Action Button -->
+                    <button onclick="runAiAnalysis()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-600/25 transition flex items-center justify-center space-x-2 text-sm">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>AI 분석 실행하기</span>
+                    </button>
+                </div>
+
+                <!-- Analysis Results Panel (Right) -->
+                <div class="lg:col-span-6 bg-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-100 flex flex-col justify-between min-h-[460px]">
+                    <div>
+                        <!-- Header -->
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">AI 판독 결과</span>
+                                <h3 id="res-title" class="text-xl sm:text-2xl font-black text-slate-800 mt-0.5">분석 대기 중</h3>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-slate-400 block">신뢰도</span>
+                                <span id="res-confidence" class="text-lg sm:text-xl font-extrabold text-emerald-600">--%</span>
+                            </div>
+                        </div>
+
+                        <!-- Result Badges -->
+                        <div class="flex flex-wrap gap-2 my-3">
+                            <span id="badge-category" class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                                <i class="fa-solid fa-tag mr-1"></i>재질: 미확인
+                            </span>
+                            <span id="badge-status" class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                                <i class="fa-solid fa-circle-info mr-1"></i>상태: 분석 필요
+                            </span>
+                        </div>
+
+                        <!-- Hazard Warning Box -->
+                        <div id="res-warning-box" class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs leading-relaxed mb-3 hidden">
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm mt-0.5"></i>
+                                <div>
+                                    <strong id="warning-title" class="font-bold block mb-0.5">주의사항</strong>
+                                    <span id="warning-desc">이물질이 묻은 경우 재활용이 불가능합니다.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step-by-Step Guide -->
+                        <div class="space-y-2.5">
+                            <h4 class="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                                <i class="fa-solid fa-list-ol text-emerald-600"></i>
+                                <span>단계별 올바른 배출 요령</span>
+                            </h4>
+                            <ol id="res-steps" class="space-y-2 text-xs text-slate-600">
+                                <li class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-start space-x-2">
+                                    <span class="w-4 h-4 rounded-full bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-[10px] shrink-0">1</span>
+                                    <span>배출할 쓰레기를 위 카메라 또는 샘플로 선택 후 [AI 분석]을 눌러주세요.</span>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Log Claim Button -->
+                    <div id="claim-impact-area" class="pt-3 border-t border-slate-100 mt-4 hidden">
+                        <button onclick="logCurrentAction()" class="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                            <span>이 배출 활동을 나의 탄소 다이어리에 기록하기 (+0.12kg CO₂ 절감)</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Special Bin Interactive Map Section -->
+        <section id="map" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">특수 수거함 Finder</span>
+                        <h2 class="text-2xl font-extrabold text-slate-900">우리 동네 환경 거점 지도</h2>
+                        <p class="text-slate-500 text-xs mt-0.5">폐건전지, 형광등, 의류 수거함 및 제로웨이스트 샵 위치를 찾아보세요.</p>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="flex flex-wrap gap-1.5 text-xs font-semibold">
+                        <button onclick="filterMap('all')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white">전체</button>
+                        <button onclick="filterMap('battery')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">🔋 폐건전지</button>
+                        <button onclick="filterMap('clothes')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">👕 의류수거함</button>
+                        <button onclick="filterMap('zerowaste')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">🌱 제로웨이스트</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                    <!-- Map Graphic Canvas -->
+                    <div class="lg:col-span-8 bg-emerald-950/5 rounded-2xl min-h-[320px] relative overflow-hidden border border-slate-200 p-4 flex flex-col justify-between">
+                        <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(#059669 1px, transparent 1px); background-size: 20px 20px;"></div>
+                        
+                        <div class="relative z-10 flex justify-between items-center">
+                            <span class="bg-white/90 backdrop-blur text-slate-700 text-xs font-bold px-3 py-1 rounded-lg border border-slate-200 shadow-sm">
+                                <i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i>서울시 마포구 연남동 주변
+                            </span>
+                        </div>
+
+                        <div id="map-pin-container" class="relative w-full h-56 z-10 my-auto"><button class="absolute transform -translate-x-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg border-2 border-white transition hover:scale-125 z-20 bg-purple-600" style="left: 25%; top: 35%;"><i class="fa-solid fa-bolt text-white text-xs"></i></button><button class="absolute transform -translate-x-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg border-2 border-white transition hover:scale-125 z-20 bg-emerald-600" style="left: 55%; top: 60%;"><i class="fa-solid fa-seedling text-white text-xs"></i></button><button class="absolute transform -translate-x-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg border-2 border-white transition hover:scale-125 z-20 bg-teal-600" style="left: 75%; top: 30%;"><i class="fa-solid fa-shirt text-white text-xs"></i></button><button class="absolute transform -translate-x-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg border-2 border-white transition hover:scale-125 z-20 bg-purple-600" style="left: 40%; top: 80%;"><i class="fa-solid fa-bolt text-white text-xs"></i></button></div>
+
+                        <div class="relative z-10 text-[11px] text-slate-500 bg-white/90 backdrop-blur p-2 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <span>마커 클릭 시 상세 운영시간과 수거 품목을 안내합니다.</span>
+                            <span class="text-emerald-700 font-bold">위치 서비스 활성화</span>
+                        </div>
+                    </div>
+
+                    <!-- Selected Detail Card -->
+                    <div class="lg:col-span-4 bg-slate-50 rounded-2xl p-4 border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 text-emerald-600 font-bold text-xs mb-2">
+                                <span id="loc-category-badge" class="px-2 py-0.5 rounded bg-emerald-100">BATTERY</span>
+                            </div>
+                            <h3 id="loc-name" class="text-base font-black text-slate-800">연남동 주민센터 폐건전지함</h3>
+                            <p id="loc-address" class="text-xs text-slate-500 mt-0.5">서울 마포구 성미산로 188</p>
+
+                            <hr class="my-3 border-slate-200">
+
+                            <div class="space-y-2.5 text-xs text-slate-600">
+                                <div class="flex items-start space-x-2">
+                                    <i class="fa-solid fa-clock text-slate-400 mt-0.5"></i>
+                                    <div>
+                                        <strong class="text-slate-700 block">운영 시간</strong>
+                                        <span id="loc-hours">24시간 상시 개방</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-2">
+                                    <i class="fa-solid fa-boxes-packing text-slate-400 mt-0.5"></i>
+                                    <div>
+                                        <strong class="text-slate-700 block">수거 대상 품목</strong>
+                                        <span id="loc-items">폐건전지, 폐형광등</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="copyLocationAddress()" class="mt-4 w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-2 rounded-xl border border-slate-200 text-xs shadow-sm transition flex items-center justify-center space-x-1">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>주소 복사하기</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Eco Quiz Game Section -->
+        <section id="quiz" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                <div class="max-w-3xl mx-auto relative z-10">
+                    
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">분리수거 골든벨</span>
+                            <h2 class="text-2xl font-black mt-0.5">환경 지식 퀴즈 챌린지</h2>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur px-3.5 py-1.5 rounded-xl text-center border border-white/10">
+                            <span class="text-[10px] text-slate-300 block">획득 점수</span>
+                            <span id="quiz-score" class="text-lg font-black text-emerald-400">0 점</span>
+                        </div>
+                    </div>
+
+                    <!-- Quiz Card -->
+                    <div id="quiz-card" class="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/10 space-y-4">
+                        <div class="flex justify-between text-xs text-slate-300">
+                            <span id="quiz-progress-text">문제 1 / 2</span>
+                            <span id="quiz-category-tag" class="text-emerald-400 font-bold">주방 쓰레기</span>
+                        </div>
+
+                        <h3 id="quiz-question" class="text-base sm:text-lg font-bold leading-relaxed">기름기와 양념이 베어있는 컵라면 용기는 어떻게 버려야 할까요?</h3>
+
+                        <div id="quiz-options" class="grid grid-cols-1 gap-2.5"><button class="w-full text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition flex items-center justify-between"><span>스티로폼 수거함에 바로 넣는다.</span><i class="fa-regular fa-circle text-slate-400"></i></button><button class="w-full text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition flex items-center justify-between"><span>지워지지 않는다면 잘게 쪼개어 종량제(일반) 봉투에 버린다.</span><i class="fa-regular fa-circle text-slate-400"></i></button><button class="w-full text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition flex items-center justify-between"><span>플라스틱 수거함에 버린다.</span><i class="fa-regular fa-circle text-slate-400"></i></button></div>
+
+                        <div id="quiz-explanation" class="hidden p-3.5 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-xs leading-relaxed text-emerald-200">
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex justify-end">
+                        <button id="quiz-next-btn" onclick="nextQuiz()" class="hidden bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-lg">
+                            다음 문제로 이동 <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Eco Impact Counter & Activity Log Section -->
+        <section id="impact" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+            <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-xl border border-slate-100">
+                <div class="text-center max-w-2xl mx-auto mb-6">
+                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">환경 오염 예방 성과</span>
+                    <h2 class="text-2xl font-extrabold text-slate-900 mt-0.5">나의 탄소 절감 다이어리</h2>
+                </div>
+
+                <!-- Stats Counters Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex items-center space-x-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-emerald-600/30">
+                            <i class="fa-solid fa-recycle"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500 font-bold block">총 실천 횟수</span>
+                            <span id="stat-count" class="text-xl font-black text-slate-800">12 회</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-teal-50 rounded-2xl p-4 border border-teal-100 flex items-center space-x-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-teal-600/30">
+                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500 font-bold block">누적 CO₂ 절감량</span>
+                            <span id="stat-co2" class="text-xl font-black text-slate-800">1.44 kg</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center space-x-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-green-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-green-600/30">
+                            <i class="fa-solid fa-tree"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500 font-bold block">소나무 식재 효과</span>
+                            <span id="stat-trees" class="text-xl font-black text-slate-800">0.22 그루</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Log History List -->
+                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200">
+                    <h3 class="text-xs font-bold text-slate-800 mb-3 flex items-center justify-between">
+                        <span>최근 실천 활동기록</span>
+                        <span class="text-[10px] font-normal text-slate-500">자동 동기화됨</span>
+                    </h3>
+                    <div id="impact-log-list" class="space-y-2 text-xs"><div class="p-2.5 bg-white rounded-xl border border-slate-200/60 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                        <span class="font-bold text-slate-700">투명 페트병 올바른 분리배출</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-emerald-600 font-extrabold block">-0.12 kg CO₂</span>
+                        <span class="text-[9px] text-slate-400">오늘 10:15</span>
+                    </div>
+                </div><div class="p-2.5 bg-white rounded-xl border border-slate-200/60 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                        <span class="font-bold text-slate-700">폐건전지 전용 수거함 투입</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-emerald-600 font-extrabold block">-0.15 kg CO₂</span>
+                        <span class="text-[9px] text-slate-400">어제 18:30</span>
+                    </div>
+                </div></div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- SOURCE CODE COPY MODAL DIALOG -->
+    <div id="code-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-code text-emerald-600 text-lg"></i>
+                    <h3 class="font-extrabold text-slate-800 text-base">전체 소스코드 복사 (Single HTML File)</h3>
+                </div>
+                <button onclick="closeCodeModal()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="p-4 flex-grow overflow-y-auto space-y-3 custom-scrollbar">
+                <p class="text-xs text-slate-600">
+                    아래 버튼을 눌러 프로젝트의 단일 파일 전체 HTML/CSS/JS 코드를 클립보드에 바로 복사할 수 있습니다.
+                </p>
+                <div class="relative">
+                    <textarea id="source-code-textarea" readonly="" class="w-full h-64 p-3 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl focus:outline-none custom-scrollbar resize-none"></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                <span id="copy-status-msg" class="text-xs font-bold text-emerald-600 hidden">
+                    <i class="fa-solid fa-check-circle mr-1"></i>코드가 클립보드에 복사되었습니다!
+                </span>
+                <div class="flex space-x-2 ml-auto">
+                    <button onclick="closeCodeModal()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition">닫기</button>
+                    <button onclick="copyFullSourceCode()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-md flex items-center space-x-1.5">
+                        <i class="fa-solid fa-copy"></i>
+                        <span>클립보드로 복사</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-6 px-4 sm:px-6 lg:px-8 border-t border-slate-800 text-xs">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-leaf text-emerald-500"></i>
+                <span class="font-bold text-slate-200">찰칵분리 - 기술 수행평가 프로젝트</span>
+            </div>
+            <p>AI 이미지 판독 알고리즘 시뮬레이션 및 스마트 분리배출 안내 서비스</p>
+            <p class="text-slate-500">© 찰칵분리 All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        /* DATA PRESETS & APP STATE */
+        const PRESETS = {
+            pet: {
+                title: "투명 페트병",
+                confidence: 98,
+                category: "플라스틱 (PET)",
+                status: "재활용 가능",
+                image: "https://images.unsplash.com/photo-1605600659873-d808a13e4d2a?auto=format&fit=crop&w=600&q=80",
+                warning: null,
+                steps: [
+                    "내용물을 싹 비우고 깨끗이 헹굽니다.",
+                    "겉면의 비닐 라벨을 떼어 비닐류로 배출합니다.",
+                    "부피를 줄이도록 꾹 압축한 뒤 뚜껑을 닫아 투명 페트병 수거함에 버립니다."
+                ]
+            },
+            noodle: {
+                title: "컵라면 용기 (스티로폼)",
+                confidence: 95,
+                category: "스티로폼 (PSP)",
+                status: "오염물질 검출",
+                image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80",
+                warning: {
+                    title: "⚠️ 오염 스티로폼 배출 주의",
+                    desc: "국물 자국이나 빨간 기름때가 남은 용기는 재활용이 불가능합니다. 일반쓰레기(종량제)로 배출하세요."
+                },
+                steps: [
+                    "물로 씻어도 국물 자국이 남아있다면 재활용이 불가능합니다.",
+                    "잘게 쪼개어 종량제 봉투에 버려주세요.",
+                    "햇볕에 말려 자국이 지워졌다면 스티로폼으로 배출 가능합니다."
+                ]
+            },
+            pizza: {
+                title: "피자 박스",
+                confidence: 92,
+                category: "종이류 / 일반쓰레기",
+                status: "부분 오염",
+                image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80",
+                warning: {
+                    title: "⚠️ 기름 오염 종이 주의",
+                    desc: "피자 기름이 묻은 하단 박스는 종이 재활용이 되지 않습니다."
+                },
+                steps: [
+                    "기름이 묻지 않은 깨끗한 덮개 부분만 찢어서 종이류로 배출합니다.",
+                    "기름과 음식물이 묻은 상자 하단은 일반 쓰레기로 버립니다.",
+                    "고정용 삼각 플라스틱 핀은 플라스틱으로 분리합니다."
+                ]
+            },
+            battery: {
+                title: "폐건전지",
+                confidence: 99,
+                category: "특수 유해 폐기물",
+                status: "전용 수거함 필수",
+                image: "https://images.unsplash.com/photo-1619641782812-7098801d0176?auto=format&fit=crop&w=600&q=80",
+                warning: {
+                    title: "🚨 화재 및 중금속 위험",
+                    desc: "일반 쓰레기나 플라스틱으로 버리면 수거 차량 및 처리장 화재 원인이 됩니다."
+                },
+                steps: [
+                    "절대 종량제 봉투나 일반 재활용함에 넣지 마세요.",
+                    "주민센터나 아파트 단지 내 '폐건전지 전용 수거함'에 버립니다.",
+                    "아래 '특수 수거함 지도'에서 가까운 건전지 수거함을 확인하세요."
+                ]
+            }
+        };
+
+        const MAP_LOCATIONS = [
+            { id: 1, type: 'battery', name: '연남동 주민센터 폐건전지함', addr: '서울 마포구 성미산로 188', hours: '24시간 상시 개방', items: '폐건전지, 폐형광등', x: 25, y: 35 },
+            { id: 2, type: 'zerowaste', name: '알맹상점 제로웨이스트 샵', addr: '서울 마포구 월드컵로49', hours: '12:00 ~ 20:00 (월 휴무)', items: '세제 리필, 대나무 칫솔', x: 55, y: 60 },
+            { id: 3, type: 'clothes', name: '연남공원 입구 의류수거함', addr: '서울 마포구 동교로 212', hours: '24시간 상시', items: '헌옷, 신발, 가방', x: 75, y: 30 },
+            { id: 4, type: 'battery', name: '홍대입구역 스마트 수거함', addr: '서울 마포구 양화로 160', hours: '05:00 ~ 24:00', items: '보조배터리, 폐건전지', x: 40, y: 80 }
+        ];
+
+        const QUIZ_DATA = [
+            {
+                q: "기름기와 양념이 베어있는 컵라면 용기는 어떻게 버려야 할까요?",
+                cat: "주방 쓰레기",
+                options: [
+                    "스티로폼 수거함에 바로 넣는다.",
+                    "지워지지 않는다면 잘게 쪼개어 종량제(일반) 봉투에 버린다.",
+                    "플라스틱 수거함에 버린다."
+                ],
+                answer: 1,
+                exp: "오염된 스티로폼은 재활용 공정에서 잔여물 문제를 일으키므로 일반쓰레기로 버려야 합니다."
+            },
+            {
+                q: "투명 페트병을 버릴 때 올바른 배출 방법은?",
+                cat: "플라스틱 배출",
+                options: [
+                    "라벨을 떼지 않고 그냥 버린다.",
+                    "내용물을 비우고 라벨을 제거한 뒤 압축해 뚜껑을 닫아 버린다.",
+                    "가위로 잘게 잘라서 버린다."
+                ],
+                answer: 1,
+                exp: "투명 페트병은 고품질 재생 원료로 쓰이므로 라벨 제거 및 압축 배출이 필수적입니다."
+            }
+        ];
+
+        let currentPresetKey = 'pet';
+        let currentQuizIdx = 0;
+        let quizScore = 0;
+        let activeWebcamStream = null;
+        let userStats = {
+            count: 12,
+            co2: 1.44,
+            trees: 0.22,
+            logs: [
+                { time: '오늘 10:15', item: '투명 페트병 올바른 분리배출', co2: 0.12 },
+                { time: '어제 18:30', item: '폐건전지 전용 수거함 투입', co2: 0.15 }
+            ]
+        };
+
+        window.onload = function() {
+            renderMapPins('all');
+            selectMapLocation(MAP_LOCATIONS[0]);
+            loadQuizQuestion();
+            renderImpactStats();
+        };
+
+        function scrollToAnalyzer() {
+            document.getElementById('analyzer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* Modal Code Logic */
+        function openCodeModal() {
+            const modal = document.getElementById('code-modal');
+            const textarea = document.getElementById('source-code-textarea');
+            textarea.value = document.documentElement.outerHTML;
+            modal.classList.remove('hidden');
+        }
+
+        function closeCodeModal() {
+            document.getElementById('code-modal').classList.add('hidden');
+            document.getElementById('copy-status-msg').classList.add('hidden');
+        }
+
+        function copyFullSourceCode() {
+            const textarea = document.getElementById('source-code-textarea');
+            textarea.select();
+            document.execCommand('copy');
+            const msg = document.getElementById('copy-status-msg');
+            msg.classList.remove('hidden');
+            setTimeout(() => { msg.classList.add('hidden'); }, 3000);
+        }
+
+        /* Input Mode Switcher */
+        function switchInputMode(mode) {
+            const btnPreset = document.getElementById('btn-mode-preset');
+            const btnUpload = document.getElementById('btn-mode-upload');
+            const btnCamera = document.getElementById('btn-mode-camera');
+
+            const viewPreset = document.getElementById('view-preset');
+            const viewUpload = document.getElementById('view-upload');
+            const viewCamera = document.getElementById('view-camera');
+            const presetGroup = document.getElementById('preset-selector-group');
+
+            [btnPreset, btnUpload, btnCamera].forEach(b => {
+                b.className = "flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition text-slate-500 hover:text-slate-800";
+            });
+
+            viewPreset.classList.add('hidden');
+            viewUpload.classList.add('hidden');
+            viewCamera.classList.add('hidden');
+            presetGroup.classList.add('hidden');
+
+            stopWebcam();
+
+            if (mode === 'preset') {
+                btnPreset.className = "flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-emerald-700 shadow-sm";
+                viewPreset.classList.remove('hidden');
+                presetGroup.classList.remove('hidden');
+            } else if (mode === 'upload') {
+                btnUpload.className = "flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-emerald-700 shadow-sm";
+                viewUpload.classList.remove('hidden');
+            } else if (mode === 'camera') {
+                btnCamera.className = "flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition bg-white text-emerald-700 shadow-sm";
+                viewCamera.classList.remove('hidden');
+                startWebcam();
+            }
+        }
+
+        function selectPreset(key) {
+            currentPresetKey = key;
+            const data = PRESETS[key];
+            document.getElementById('preset-image-preview').src = data.image;
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const preview = document.getElementById('upload-preview');
+                const placeholder = document.getElementById('upload-placeholder');
+                preview.src = evt.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function startWebcam() {
+            const video = document.getElementById('webcam-feed');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        activeWebcamStream = stream;
+                        video.srcObject = stream;
+                    })
+                    .catch(err => {
+                        console.warn("Webcam access restricted:", err);
+                    });
+            }
+        }
+
+        function stopWebcam() {
+            if (activeWebcamStream) {
+                activeWebcamStream.getTracks().forEach(track => track.stop());
+                activeWebcamStream = null;
+            }
+        }
+
+        function captureWebcam() {
+            const video = document.getElementById('webcam-feed');
+            const canvas = document.getElementById('webcam-canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            runAiAnalysis();
+        }
+
+        function runAiAnalysis() {
+            const overlay = document.getElementById('scanner-overlay');
+            overlay.classList.remove('hidden');
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                displayAnalysisResult(PRESETS[currentPresetKey]);
+            }, 1000);
+        }
+
+        function displayAnalysisResult(data) {
+            document.getElementById('res-title').innerText = data.title;
+            document.getElementById('res-confidence').innerText = data.confidence + '%';
+            
+            document.getElementById('badge-category').innerHTML = `<i class="fa-solid fa-tag mr-1"></i>재질: ${data.category}`;
+            document.getElementById('badge-status').innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i>상태: ${data.status}`;
+
+            const warnBox = document.getElementById('res-warning-box');
+            if (data.warning) {
+                document.getElementById('warning-title').innerText = data.warning.title;
+                document.getElementById('warning-desc').innerText = data.warning.desc;
+                warnBox.classList.remove('hidden');
+            } else {
+                warnBox.classList.add('hidden');
+            }
+
+            const stepsOl = document.getElementById('res-steps');
+            stepsOl.innerHTML = '';
+            data.steps.forEach((step, idx) => {
+                const li = document.createElement('li');
+                li.className = "p-2 bg-slate-50 rounded-xl border border-slate-100 flex items-start space-x-2";
+                li.innerHTML = `
+                    <span class="w-4 h-4 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">${idx + 1}</span>
+                    <span class="text-slate-700 font-medium">${step}</span>
+                `;
+                stepsOl.appendChild(li);
+            });
+
+            document.getElementById('claim-impact-area').classList.remove('hidden');
+        }
+
+        /* Map Functions */
+        function renderMapPins(filter) {
+            const container = document.getElementById('map-pin-container');
+            container.innerHTML = '';
+
+            MAP_LOCATIONS.forEach(loc => {
+                if (filter !== 'all' && loc.type !== filter) return;
+
+                const pin = document.createElement('button');
+                pin.className = `absolute transform -translate-x-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg border-2 border-white transition hover:scale-125 z-20 ${getPinColorClass(loc.type)}`;
+                pin.style.left = loc.x + '%';
+                pin.style.top = loc.y + '%';
+                pin.onclick = () => selectMapLocation(loc);
+
+                pin.innerHTML = `<i class="${getPinIconClass(loc.type)} text-white text-xs"></i>`;
+                container.appendChild(pin);
+            });
+        }
+
+        function getPinColorClass(type) {
+            if (type === 'battery') return 'bg-purple-600';
+            if (type === 'zerowaste') return 'bg-emerald-600';
+            if (type === 'clothes') return 'bg-teal-600';
+            return 'bg-slate-800';
+        }
+
+        function getPinIconClass(type) {
+            if (type === 'battery') return 'fa-solid fa-bolt';
+            if (type === 'zerowaste') return 'fa-solid fa-seedling';
+            if (type === 'clothes') return 'fa-solid fa-shirt';
+            return 'fa-solid fa-location-dot';
+        }
+
+        function filterMap(category) {
+            renderMapPins(category);
+        }
+
+        function selectMapLocation(loc) {
+            document.getElementById('loc-name').innerText = loc.name;
+            document.getElementById('loc-address').innerText = loc.addr;
+            document.getElementById('loc-hours').innerText = loc.hours;
+            document.getElementById('loc-items').innerText = loc.items;
+            document.getElementById('loc-category-badge').innerText = loc.type.toUpperCase();
+        }
+
+        function copyLocationAddress() {
+            const addr = document.getElementById('loc-address').innerText;
+            const tempInput = document.createElement("input");
+            tempInput.value = addr;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            alert("주소가 복사되었습니다: " + addr);
+        }
+
+        /* Quiz Logic */
+        function loadQuizQuestion() {
+            const quiz = QUIZ_DATA[currentQuizIdx];
+            document.getElementById('quiz-progress-text').innerText = `문제 ${currentQuizIdx + 1} / ${QUIZ_DATA.length}`;
+            document.getElementById('quiz-category-tag').innerText = quiz.cat;
+            document.getElementById('quiz-question').innerText = quiz.q;
+
+            const optsDiv = document.getElementById('quiz-options');
+            optsDiv.innerHTML = '';
+
+            quiz.options.forEach((optText, i) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition flex items-center justify-between";
+                btn.onclick = () => answerQuiz(i);
+                btn.innerHTML = `<span>${optText}</span><i class="fa-regular fa-circle text-slate-400"></i>`;
+                optsDiv.appendChild(btn);
+            });
+
+            document.getElementById('quiz-explanation').classList.add('hidden');
+            document.getElementById('quiz-next-btn').classList.add('hidden');
+        }
+
+        function answerQuiz(selectedIdx) {
+            const quiz = QUIZ_DATA[currentQuizIdx];
+            const opts = document.getElementById('quiz-options').children;
+            const expBox = document.getElementById('quiz-explanation');
+
+            for (let i = 0; i < opts.length; i++) {
+                opts[i].disabled = true;
+                if (i === quiz.answer) {
+                    opts[i].className = "w-full text-left p-3 rounded-xl bg-emerald-500/30 border border-emerald-400 text-xs font-bold flex items-center justify-between text-emerald-200";
+                    opts[i].innerHTML += `<i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+                } else if (i === selectedIdx) {
+                    opts[i].className = "w-full text-left p-3 rounded-xl bg-red-500/30 border border-red-400 text-xs font-medium flex items-center justify-between text-red-200";
+                    opts[i].innerHTML += `<i class="fa-solid fa-circle-xmark text-red-400"></i>`;
+                }
+            }
+
+            if (selectedIdx === quiz.answer) {
+                quizScore += 100;
+                document.getElementById('quiz-score').innerText = quizScore + ' 점';
+            }
+
+            expBox.innerHTML = `<strong>💡 해설:</strong> ${quiz.exp}`;
+            expBox.classList.remove('hidden');
+
+            document.getElementById('quiz-next-btn').classList.remove('hidden');
+        }
+
+        function nextQuiz() {
+            currentQuizIdx = (currentQuizIdx + 1) % QUIZ_DATA.length;
+            loadQuizQuestion();
+        }
+
+        /* Stats Logic */
+        function logCurrentAction() {
+            const data = PRESETS[currentPresetKey];
+            const newLog = {
+                time: '방금 전',
+                item: `${data.title} 배출 완료`,
+                co2: 0.12
+            };
+
+            userStats.count += 1;
+            userStats.co2 = parseFloat((userStats.co2 + 0.12).toFixed(2));
+            userStats.trees = parseFloat((userStats.co2 * 0.15).toFixed(2));
+            userStats.logs.unshift(newLog);
+
+            renderImpactStats();
+            alert("탄소 다이어리에 성공적으로 기록되었습니다! (+0.12kg CO₂ 절감)");
+        }
+
+        function renderImpactStats() {
+            document.getElementById('stat-count').innerText = userStats.count + ' 회';
+            document.getElementById('stat-co2').innerText = userStats.co2 + ' kg';
+            document.getElementById('stat-trees').innerText = userStats.trees + ' 그루';
+
+            const logList = document.getElementById('impact-log-list');
+            logList.innerHTML = '';
+
+            userStats.logs.slice(0, 5).forEach(log => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "p-2.5 bg-white rounded-xl border border-slate-200/60 flex items-center justify-between";
+                itemDiv.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                        <span class="font-bold text-slate-700">${log.item}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-emerald-600 font-extrabold block">-${log.co2} kg CO₂</span>
+                        <span class="text-[9px] text-slate-400">${log.time}</span>
+                    </div>
+                `;
+                logList.appendChild(itemDiv);
+            });
+        }
+    </script>
+
+</body></html>
